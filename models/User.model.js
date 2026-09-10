@@ -2,24 +2,35 @@ import { Schema, model } from "mongoose";
 
 const userSchema = new Schema(
   {
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+      maxLength: 100,
+    },
+    surname: {
+      type: String,
+      required: true,
+      trim: true,
+      maxLength: 100,
+    },
     email: {
       type: String,
-      required: [true, "Email is required."],
+      required: true,
       unique: true,
       lowercase: true,
       trim: true,
+      maxLength: 100,
     },
-    password: {
+    passwordHash: {
       type: String,
-      required: [true, "Password is required."],
+      required: true,
     },
   },
   {
-    // this second object adds extra properties: `createdAt` and `updatedAt`
     timestamps: true,
   },
 );
 
 const User = model("User", userSchema);
-
 export default User;

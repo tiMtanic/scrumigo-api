@@ -38,5 +38,4 @@ const sprintSchema = new Schema(
   },
 );
 
-const Sprint = model("Sprint", userSchema);
-export default Sprint;
+export default  model("Sprint", sprintSchema);

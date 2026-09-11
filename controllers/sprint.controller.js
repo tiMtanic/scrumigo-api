@@ -12,6 +12,11 @@ export const getSprints = async (req, res, next) => {
 export const getSprint = async (req, res, next) => {
   try {
     const result = await Sprint.findOne({ _id: req.params.sprintId });
+
+    if (!result) {
+      res.sendStatus(404);
+    }
+
     res.status(200).json(result);
   } catch (error) {
     next(error);

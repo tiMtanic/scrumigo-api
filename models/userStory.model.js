@@ -2,16 +2,16 @@ import { Schema, model } from "mongoose";
 
 const userStorySchema = new Schema(
   {
-    sprintId: {
-      type: Schema.Types.ObjectId,
-      ref: "Sprint",
-      default: null,
-    },
     userStoryNumber: {
       type: Number,
       required: true,
       unique: true,
       min: 1,
+    },
+    sprintId: {
+      type: Schema.Types.ObjectId,
+      ref: "Sprint",
+      default: null,
     },
     title: {
       type: String,
@@ -32,7 +32,7 @@ const userStorySchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
-    },
+    }
   },
   {
     timestamps: true,

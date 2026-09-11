@@ -5,23 +5,23 @@ import { createSprint, deleteSprint, getSprint, getSprints, updateSprint } from 
 const router = express.Router();
 
 // Get all sprints
-// /api/sprints
+// GET /api/sprints
 router.get("/", verifyToken, getSprints);
 
 // Get sprint by ID
-// /api/sprints/:sprintId
+// GET /api/sprints/:sprintId
 router.get("/:sprintId", verifyToken, getSprint);
 
 // Create sprint
-// /api/sprints
+// POST /api/sprints
 router.post("/", verifyToken, createSprint);
 
 // Update sprint
-// /api/sprints/:sprintId
+// PATCH /api/sprints/:sprintId
 router.patch("/:sprintId", verifyToken, updateSprint);
 
 // Delete sprint
-// /api/sprints/:sprintId
+// DELETE /api/sprints/:sprintId
 router.delete("/:sprintId", verifyToken, deleteSprint);
 
 export default router;

@@ -8,11 +8,11 @@ const taskSchema = new Schema(
       unique: true,
       min: 1,
     },
-    position: {
-      type: Number,
-      required: true,
-      min: 0,
-    },
+    // position: {
+    //   type: Number,
+    //   required: true,
+    //   min: 0,
+    // },
     title: {
       type: String,
       required: true,

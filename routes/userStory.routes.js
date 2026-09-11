@@ -1,9 +1,14 @@
 import express from "express";
 import { verifyToken } from "../middlewares/auth.middlewares.js";
-import { createUserStory, deleteUserStory, getUserStories, getUserStory, updateUserStory } from "../controllers/userStory.controller.js";
+import {
+  createUserStory,
+  deleteUserStory,
+  getUserStories,
+  getUserStory,
+  updateUserStory,
+} from "../controllers/userStory.controller.js";
 
 const router = express.Router();
-
 
 // Get userStories
 // GET /api/userStories

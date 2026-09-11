@@ -8,6 +8,11 @@ const userStorySchema = new Schema(
       unique: true,
       min: 1,
     },
+    // position: {
+    //   type: Number,
+    //   required: true,
+    //   min: 0,
+    // },
     sprintId: {
       type: Schema.Types.ObjectId,
       ref: "Sprint",

@@ -1,6 +1,12 @@
 import express from "express";
 import { verifyToken } from "../middlewares/auth.middlewares.js";
-import { createSprint, deleteSprint, getSprint, getSprints, updateSprint } from "../controllers/sprint.controller.js";
+import {
+  createSprint,
+  deleteSprint,
+  getSprint,
+  getSprints,
+  updateSprint,
+} from "../controllers/sprint.controller.js";
 
 const router = express.Router();
 

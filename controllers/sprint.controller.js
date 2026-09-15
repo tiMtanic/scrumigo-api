@@ -1,8 +1,17 @@
 import Sprint from "../models/sprint.model.js";
+import UserStory from "../models/userStory.model.js";
 
 export const getSprints = async (req, res, next) => {
   try {
-    const result = await Sprint.find();
+    const { populateUserStories } = req.query;
+
+    let query = Sprint.find();
+
+    if (populateUserStories === "true") {
+      query = query.populate("userStories");
+    }
+
+    const result = await query;
     res.status(200).json(result);
   } catch (error) {
     next(error);
@@ -11,10 +20,18 @@ export const getSprints = async (req, res, next) => {
 
 export const getSprint = async (req, res, next) => {
   try {
-    const result = await Sprint.findOne({ _id: req.params.sprintId });
+    const { populateStories } = req.query;
+
+    let query = Sprint.findById(req.params.sprintId);
+
+    if (populateStories === "true") {
+      query = query.populate("userStories");
+    }
+
+    const result = await query;
 
     if (!result) {
-      res.sendStatus(404);
+      return res.sendStatus(404);
     }
 
     res.status(200).json(result);
@@ -25,7 +42,7 @@ export const getSprint = async (req, res, next) => {
 
 export const createSprint = async (req, res, next) => {
   try {
-    const { name, goal, startDate, endDate, status } = req.body;
+    const { name, goal, startDate, endDate, status, userStories } = req.body;
 
     if (!startDate || !endDate || !status) {
       res.status(400).json({
@@ -44,6 +61,7 @@ export const createSprint = async (req, res, next) => {
       startDate,
       endDate,
       status,
+      userStories,
     });
 
     res.status(201).json(result);
@@ -54,7 +72,7 @@ export const createSprint = async (req, res, next) => {
 
 export const updateSprint = async (req, res, next) => {
   try {
-    const { name, goal, startDate, endDate, status } = req.body;
+    const { name, goal, startDate, endDate, status, userStories } = req.body;
 
     if (!startDate || !endDate || !status) {
       res.status(400).json({
@@ -70,6 +88,7 @@ export const updateSprint = async (req, res, next) => {
         startDate,
         endDate,
         status,
+        userStories,
       },
       {
         runValidators: true,

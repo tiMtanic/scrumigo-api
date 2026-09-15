@@ -70,7 +70,7 @@ export const updateTask = async (req, res, next) => {
         description,
         status,
         userStoryId,
-        assigneeId
+        assigneeId,
       },
       {
         runValidators: true,

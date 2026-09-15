@@ -38,7 +38,7 @@ export const signUp = async (req, res, next) => {
       passwordHash: hashedPassword,
     });
 
-    res.sendStatus(201);
+    await logIn(req, res, next);
   } catch (error) {
     next(error);
   }

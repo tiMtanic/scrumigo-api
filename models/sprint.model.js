@@ -32,6 +32,11 @@ const sprintSchema = new Schema(
       enum: ["draft", "planned", "active", "completed"],
       default: "draft",
     },
+    userStories: {
+      type: [Schema.Types.ObjectId],
+      ref: "UserStory",
+      default: []
+    }
   },
   {
     timestamps: true,

@@ -1,9 +1,23 @@
 import UserStory from "../models/userStory.model.js";
 import Sprint from "../models/sprint.model.js";
+import Task from "../models/task.model.js";
 
 export const getUserStories = async (req, res, next) => {
   try {
-    const result = await UserStory.find();
+    const { populateSprint, populateTasks } = req.query;
+
+    let query = UserStory.find();
+
+    if (populateSprint === "true") {
+      query = query.populate("sprintId");
+    }
+
+    if (populateTasks === "true") {
+      query = query.populate("tasks");
+    }
+
+    const result = await query;
+
     res.status(200).json(result);
   } catch (error) {
     next(error);
@@ -12,7 +26,19 @@ export const getUserStories = async (req, res, next) => {
 
 export const getUserStory = async (req, res, next) => {
   try {
-    const result = await UserStory.findOne({ _id: req.params.userStoryId });
+    const { populateSprint, populateTasks } = req.query;
+
+    let query = UserStory.findById(req.params.userStoryId);
+
+    if (populateSprint === "true") {
+      query = query.populate("sprintId");
+    }
+
+    if (populateTasks === "true") {
+      query = query.populate("tasks");
+    }
+
+    const result = await query;
 
     if (!result) {
       return res.sendStatus(404);
@@ -25,7 +51,7 @@ export const getUserStory = async (req, res, next) => {
 };
 
 export const createUserStory = async (req, res, next) => {
-  const { sprintId, title, description, storyPoints } = req.body;
+  const { sprintId, title, description, status, storyPoints } = req.body;
 
   try {
     if (!title) {
@@ -41,7 +67,6 @@ export const createUserStory = async (req, res, next) => {
     const lastUsedUserStoryNumber = lastUserStory?.userStoryNumber ?? 0;
     const userStoryNumber = lastUsedUserStoryNumber + 1;
 
-    // Get UserId from payload
     const createdBy = req.payload._id;
 
     const result = await UserStory.create({
@@ -49,8 +74,10 @@ export const createUserStory = async (req, res, next) => {
       sprintId,
       title,
       description,
+      status,
       storyPoints,
       createdBy,
+      tasks: [],
     });
 
     if (sprintId) {
@@ -68,7 +95,7 @@ export const createUserStory = async (req, res, next) => {
 };
 
 export const updateUserStory = async (req, res, next) => {
-  const { sprintId, title, description, storyPoints } = req.body;
+  const { sprintId, title, description, status, storyPoints } = req.body;
 
   try {
     if (!title) {
@@ -89,6 +116,7 @@ export const updateUserStory = async (req, res, next) => {
         sprintId,
         title,
         description,
+        status,
         storyPoints,
       },
       {
@@ -123,11 +151,15 @@ export const updateUserStory = async (req, res, next) => {
 
 export const deleteUserStory = async (req, res, next) => {
   try {
-    const result = await UserStory.findByIdAndDelete(req.params.userStoryId);
+    const result = await UserStory.findById(req.params.userStoryId);
 
     if (!result) {
       return res.sendStatus(404);
     }
+
+    await Task.deleteMany({
+      userStoryId: result._id,
+    });
 
     if (result.sprintId) {
       await Sprint.findByIdAndUpdate(result.sprintId, {
@@ -136,6 +168,8 @@ export const deleteUserStory = async (req, res, next) => {
         },
       });
     }
+
+    await UserStory.findByIdAndDelete(result._id);
 
     res.sendStatus(204);
   } catch (error) {

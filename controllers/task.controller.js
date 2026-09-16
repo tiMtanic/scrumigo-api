@@ -1,4 +1,5 @@
 import Task from "../models/task.model.js";
+import UserStory from "../models/userStory.model.js";
 
 export const getTasks = async (req, res, next) => {
   try {
@@ -11,10 +12,12 @@ export const getTasks = async (req, res, next) => {
 
 export const getTask = async (req, res, next) => {
   try {
-    const result = await Task.findOne({ _id: req.params.taskId });
+    const result = await Task.findOne({
+      _id: req.params.taskId,
+    });
 
     if (!result) {
-      res.sendStatus(404);
+      return res.sendStatus(404);
     }
 
     res.status(200).json(result);
@@ -25,18 +28,28 @@ export const getTask = async (req, res, next) => {
 
 export const createTask = async (req, res, next) => {
   try {
-    const { title, description, status, userStoryId } = req.body;
+    const { title, description, status, userStoryId, assigneeId } = req.body;
 
     if (!title || !status || !userStoryId) {
-      res.status(400).json({
+      return res.status(400).json({
         errorMessage: "title, status and userStoryId are required",
+      });
+    }
+
+    const userStory = await UserStory.findById(userStoryId);
+
+    if (!userStory) {
+      return res.status(404).json({
+        errorMessage: "User story not found",
       });
     }
 
     const lastTask = await Task.findOne().sort({
       taskNumber: -1,
     });
+
     const lastUsedTaskNumber = lastTask?.taskNumber ?? 0;
+
     const taskNumber = lastUsedTaskNumber + 1;
 
     const result = await Task.create({
@@ -45,6 +58,13 @@ export const createTask = async (req, res, next) => {
       description,
       status,
       userStoryId,
+      assigneeId,
+    });
+
+    await UserStory.findByIdAndUpdate(userStoryId, {
+      $push: {
+        tasks: result._id,
+      },
     });
 
     res.status(201).json(result);
@@ -55,11 +75,11 @@ export const createTask = async (req, res, next) => {
 
 export const updateTask = async (req, res, next) => {
   try {
-    const { title, description, status, userStoryId, assigneeId } = req.body;
+    const { title, description, status, assigneeId } = req.body;
 
-    if (!title || !status || !userStoryId) {
-      res.status(400).json({
-        errorMessage: "title, status and userStoryId are required",
+    if (!title || !status) {
+      return res.status(400).json({
+        errorMessage: "title and status are required",
       });
     }
 
@@ -69,7 +89,6 @@ export const updateTask = async (req, res, next) => {
         title,
         description,
         status,
-        userStoryId,
         assigneeId,
       },
       {
@@ -77,6 +96,10 @@ export const updateTask = async (req, res, next) => {
         returnDocument: "after",
       },
     );
+
+    if (!result) {
+      return res.sendStatus(404);
+    }
 
     res.status(200).json(result);
   } catch (error) {
@@ -86,7 +109,18 @@ export const updateTask = async (req, res, next) => {
 
 export const deleteTask = async (req, res, next) => {
   try {
-    await Task.findByIdAndDelete(req.params.taskId);
+    const result = await Task.findByIdAndDelete(req.params.taskId);
+
+    if (!result) {
+      return res.sendStatus(404);
+    }
+
+    await UserStory.findByIdAndUpdate(result.userStoryId, {
+      $pull: {
+        tasks: result._id,
+      },
+    });
+
     res.sendStatus(204);
   } catch (error) {
     next(error);

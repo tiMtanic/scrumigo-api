@@ -29,6 +29,12 @@ const userStorySchema = new Schema(
       trim: true,
       maxLength: 5000,
     },
+    status: {
+      type: String,
+      required: true,
+      enum: ["draft", "planned", "in_progress", "done"],
+      default: "draft",
+    },
     storyPoints: {
       type: Number,
       min: 0,
@@ -37,7 +43,12 @@ const userStorySchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
-    }
+    },
+    tasks: {
+      type: [Schema.Types.ObjectId],
+      ref: "Task",
+      default: [],
+    },
   },
   {
     timestamps: true,

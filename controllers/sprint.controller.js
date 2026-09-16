@@ -20,11 +20,11 @@ export const getSprints = async (req, res, next) => {
 
 export const getSprint = async (req, res, next) => {
   try {
-    const { populateStories } = req.query;
+    const { populateUserStories } = req.query;
 
     let query = Sprint.findById(req.params.sprintId);
 
-    if (populateStories === "true") {
+    if (populateUserStories === "true") {
       query = query.populate("userStories");
     }
 

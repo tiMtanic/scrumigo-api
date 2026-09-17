@@ -3,7 +3,8 @@ import UserStory from "../models/userStory.model.js";
 
 export const getTasks = async (req, res, next) => {
   try {
-    const result = await Task.find();
+    const result = await Task.find().populate("assigneeId");
+
     res.status(200).json(result);
   } catch (error) {
     next(error);
@@ -14,7 +15,7 @@ export const getTask = async (req, res, next) => {
   try {
     const result = await Task.findOne({
       _id: req.params.taskId,
-    });
+    }).populate("assigneeId");
 
     if (!result) {
       return res.sendStatus(404);
@@ -75,13 +76,24 @@ export const createTask = async (req, res, next) => {
 
 export const updateTask = async (req, res, next) => {
   try {
-    const { title, description, status, assigneeId } = req.body;
+    const { title, description, status } = req.body;
 
     if (!title || !status) {
       return res.status(400).json({
         errorMessage: "title and status are required",
       });
     }
+
+    const oldTask = await Task.findById(req.params.taskId);
+
+    if (!oldTask) {
+      return res.sendStatus(404);
+    }
+
+    const assigneeId =
+      oldTask.status === "todo" && status === "in_progress"
+        ? req.payload._id
+        : oldTask.assigneeId;
 
     const result = await Task.findByIdAndUpdate(
       req.params.taskId,
@@ -96,10 +108,6 @@ export const updateTask = async (req, res, next) => {
         returnDocument: "after",
       },
     );
-
-    if (!result) {
-      return res.sendStatus(404);
-    }
 
     res.status(200).json(result);
   } catch (error) {

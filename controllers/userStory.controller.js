@@ -35,7 +35,10 @@ export const getUserStory = async (req, res, next) => {
     }
 
     if (populateTasks === "true") {
-      query = query.populate("tasks");
+      query = query.populate({
+        path: "tasks",
+        populate: "assigneeId",
+      });
     }
 
     const result = await query;

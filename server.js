@@ -1,8 +1,10 @@
 import express from "express";
+import { createServer } from "node:http";
 import config from "./config/index.js";
 import connectDB from "./db/index.js";
 import indexRouter from "./routes/index.routes.js";
 import handleErrors from "./errors/index.js";
+import { attachWebSocketServer } from "./realtime/websocket.js";
 
 try {
   process.loadEnvFile();
@@ -29,10 +31,18 @@ app.use("/api", indexRouter);
 // ❗ Centralized error handling (must be placed after routes)
 handleErrors(app);
 
+const server = createServer(app);
+
+attachWebSocketServer(server);
+
 // ℹ️ Defines the server port (default: 5005)
 const PORT = process.env.PORT || 5005;
 
 // ℹ️ Optional for serverless deployments like Vercel.
-app.listen(PORT, () => {
-  console.log(`Server listening. Local access on http://localhost:${PORT}`);
-});
+if (!process.env.VERCEL) {
+  server.listen(PORT, () => {
+    console.log(`Server listening. Local access on http://localhost:${PORT}`);
+  });
+}
+
+export default server;

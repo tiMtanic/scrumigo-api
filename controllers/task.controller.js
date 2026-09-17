@@ -1,5 +1,6 @@
 import Task from "../models/task.model.js";
 import UserStory from "../models/userStory.model.js";
+import { connectionManager } from "../realtime/connectionManager.js";
 
 export const getTasks = async (req, res, next) => {
   try {
@@ -50,7 +51,7 @@ export const createTask = async (req, res, next) => {
     });
 
     const lastUsedTaskNumber = lastTask?.taskNumber ?? 0;
-
+    
     const taskNumber = lastUsedTaskNumber + 1;
 
     const result = await Task.create({
@@ -68,7 +69,18 @@ export const createTask = async (req, res, next) => {
       },
     });
 
-    res.status(201).json(result);
+    const populatedTask = await Task.findById(result._id).populate(
+      "assigneeId",
+    );
+
+    connectionManager.broadcast({
+      type: "task.created",
+      payload: {
+        task: populatedTask,
+      }
+    });
+
+    res.status(201).json(populatedTask);
   } catch (error) {
     next(error);
   }
@@ -109,7 +121,15 @@ export const updateTask = async (req, res, next) => {
         runValidators: true,
         returnDocument: "after",
       },
-    );
+    ).populate("assigneeId");
+
+    connectionManager.broadcast({
+      type: "task.updated",
+      payload: {
+        task: result,
+        previousStatus: oldTask.status,
+      }
+    });
 
     res.status(200).json(result);
   } catch (error) {
@@ -129,6 +149,15 @@ export const deleteTask = async (req, res, next) => {
       $pull: {
         tasks: result._id,
       },
+    });
+
+    connectionManager.broadcast({
+      type: "task.deleted",
+      payload: {
+        taskId: result._id,
+        userStoryId: result.userStoryId,
+        taskNumber: result.taskNumber,
+      }
     });
 
     res.sendStatus(204);

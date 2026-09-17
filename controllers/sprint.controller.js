@@ -45,9 +45,19 @@ export const createSprint = async (req, res, next) => {
     const { name, goal, startDate, endDate, status, userStories } = req.body;
 
     if (!startDate || !endDate || !status) {
-      res.status(400).json({
+      return res.status(400).json({
         errorMessage: "startDate, endDate and status are required",
       });
+    }
+
+    if (status === "active") {
+      const activeSprint = await Sprint.findOne({ status: "active" });
+
+      if (activeSprint) {
+        return res.status(409).json({
+          errorMessage: "There can only be one active sprint",
+        });
+      }
     }
 
     const lastSprint = await Sprint.findOne().sort({ sprintNumber: -1 });
@@ -75,10 +85,34 @@ export const updateSprint = async (req, res, next) => {
     const { name, goal, startDate, endDate, status, userStories } = req.body;
 
     if (!startDate || !endDate || !status) {
-      res.status(400).json({
+      return res.status(400).json({
         errorMessage: "startDate, endDate and status are required",
       });
     }
+
+    const oldSprint = await Sprint.findById(req.params.sprintId);
+
+    if (!oldSprint) {
+      return res.sendStatus(404);
+    }
+
+    if (status === "active") {
+      const activeSprint = await Sprint.findOne({
+        status: "active",
+        _id: { $ne: req.params.sprintId },
+      });
+
+      if (activeSprint) {
+        return res.status(409).json({
+          errorMessage: "There can only be one active sprint",
+        });
+      }
+    }
+
+    const removedUserStories = oldSprint.userStories.filter(
+      (userStoryId) =>
+        !userStories.some((id) => String(id) === String(userStoryId)),
+    );
 
     const result = await Sprint.findByIdAndUpdate(
       req.params.sprintId,
@@ -95,6 +129,20 @@ export const updateSprint = async (req, res, next) => {
         returnDocument: "after",
       },
     );
+
+    if (removedUserStories.length > 0) {
+      await UserStory.updateMany(
+        {
+          _id: { $in: removedUserStories },
+          sprintId: result._id,
+        },
+        {
+          $set: {
+            sprintId: null,
+          },
+        },
+      );
+    }
 
     res.status(200).json(result);
   } catch (error) {

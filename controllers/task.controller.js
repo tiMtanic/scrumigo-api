@@ -91,9 +91,11 @@ export const updateTask = async (req, res, next) => {
     }
 
     const assigneeId =
-      oldTask.status === "todo" && status === "in_progress"
-        ? req.payload._id
-        : oldTask.assigneeId;
+      status === "todo"
+        ? null
+        : oldTask.status === "todo" && status === "in_progress"
+          ? req.payload._id
+          : oldTask.assigneeId;
 
     const result = await Task.findByIdAndUpdate(
       req.params.taskId,
